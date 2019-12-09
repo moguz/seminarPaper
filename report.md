@@ -13,11 +13,11 @@ This paper is tackling the same problem, which is learning a predictor which pre
 
 <img src="bird_image.png" width="30%"><img src="bird_3d.png" width="30%">
 
-The problem of 3D reconstruction from a single image is ill-posed<sup>[1]</sup>. If we had multiple images of the same object, then we could expolot multiple-view geometry, such as formulating the problem as a convex variatonal method. However, in this paper, we are only able to reconstruct 3D shape because the predictor already knows the mean shape of a bird in inference time.
+The problem of 3D reconstruction from a single image is ill-posed<sup>[1]</sup>. If we had multiple images of the same object, then we could exploit multiple-view geometry techniques, such as formulating the problem as a convex variatonal method. However, in this paper, we are only able to reconstruct 3D shape because the predictor already knows the mean shape of a bird in inference time.
 
 Related Work
 ----------------
-Prior works tackled inferring 3D shape problem with different perspectives. Some methods tried to learn deformable models using 3D ground truth data.<sup>[2][3]</sup> The drawback of these methods are that obtaining 3D ground truth data is hard and/or expensive. Especially in cases like using animals as objects, like in CUB-200-2011 dataset<sup>[4]</sup>, 2D annotated image collection is easier to obtain than 3D scans.
+Prior works tackled inferring 3D shape problem with different perspectives. First group of methods tried to learn deformable models using 3D ground truth data.<sup>[2][3]</sup> The drawback of these methods are that obtaining 3D ground truth data is hard and/or expensive. Especially in cases like using animals as objects, like in CUB-200-2011 dataset<sup>[4]</sup>, 2D annotated image collection is easier to obtain than 3D scans. Therefore, those methods are fundamentally different than this paper, which only requires 2D annotated image collection as the training data.
 
 <img src="relatedwork_1.png" width="20%"><img src="relatedwork_2.png" width="12%">
 
@@ -69,7 +69,7 @@ Arguably, the most important prediction module of this paper is shape prediction
 
 The mean shape is a category-level (for the CUB-200-2011 dataset, the category is <em>birds</em>) structure, which is learned by the predictor during training time. The naive way to initialize the mean shape is setting it to a sphere, however the authors mentioned that a smarter initizalization gives better results. First, mean keypoint locations are obtained using structure-from-motion applied to the annotated keypoints in input data. Then, the convex hull of these keypoint locations are calculated. Finally, every vertex of the initial mean shape are projected onto this convex hull. This approach already gives the mean shape a reasonable starting point, with the semanctic keypoint locations being considered.
 
-During training, the predictor updates the mean shape by minimizing the loss functions as well as learns a deformation space. By learning a deformation space, the predictor then is able to infer the instance-level deformation from the mean shape given a single image in test time. There are 2 loss functions which supervise the shape prediction module:
+During training, the predictor updates the mean shape by minimizing the loss functions as well as learns a deformation space. By learning a deformation space, the predictor then is able to infer the instance-level deformation from the mean shape given a single image in test time. There are 2 loss functions which are used in the learning process of shape prediction:
 * Keypoint projection loss
 * Segmentation mask loss
 
@@ -81,7 +81,28 @@ Keypoint projection loss ensures that the semantic keypoint locations in the pre
 
 The second loss function of the shape prediction module is the segmentation mask loss. It enforces that the predicted 3D mesh is consistent with the grount truth segmentation mask. Here, a renderer is needed since we need to compare segmentation masks in 2D. The authors use **Neural Mesh Renderer**<sup>[7]</sup> for this purpose. For a more detailed discussion about Neural Mesh Renderer, readers can see the blog post for that paper. 
 
-Intuitively, the mask loss makes sure that our predicted shape is consistent with the ground truth objects in the dataset. Even though the keypoint loss ensures we capture the semantic keypoints, mask loss is still helpful in order to fine-tune our prediction (e.g. we can imagine that it makes our predicted bird a fatter/thinner)
+Intuitively, the mask loss makes sure that our predicted shape is consistent with the ground truth segmentation masks in the dataset. Even though the keypoint loss ensures we capture the semantic keypoints, mask loss is still helpful in order to fine-tune our prediction (e.g. we can imagine that it makes our predicted bird a fatter/thinner)
+
+Inferring 3D shape from a single image brings some assumptions about the symmetry of the objects. Since there is only one image of an object available, we assume that the other half of the object is actually symmetric. For this reason, only one of the symmetric vertex pairs are learned/predicted.
+
+Texture Prediction
+---------------
+This paper, unlike the prior works, predicts texture of the 3D shapes as well. The choice of representing 3D shape with deformable mesh becomes useful in texture prediction module. Let's recall that every 3D shape of an instance is equivalent to some kind of deformation applied to the mean shape. Moreover, the mean shape is **isomorphic** to a sphere, meaning that they have corresponding shapes. This property of the mean shape allows us to represent its texture using a texture image with fixed **UV-mapping**.
+
+<img src="texture.png" width="55%">
+
+Inferring the texture of the 3D shapes is equivalent of inferring the pixel values of the corresponding texture image. Once we predict the texture image, we can apply UV-mapping to roll texture image onto the sphere. Then, we can apply apply texture to the mean image, since the mean image and the sphere are isomorphic. Finally, we can move from the mean image to the instance-specific 3D shape since we already know how every vertex of the mean shape should be deformed in order to get the instance-specific 3D shape.
+
+<img src="texture_flow.png" width="55%">
+
+Inferring pixel values of the texture image can be viewed from two perspectives. One approach would be directly predicting the pixel values by looking at the input image. This approach often results in blurry images.<sup>[1]</sup> The second approach is to predict the **texture flow**, which serves as a mapping between the input image pixels to the texture image pixels. Appearance flow tells where to copy the original pixel values, in the texture image. The obvious advantage of this method is it does not cause blurry texture images.
+
+<img src="texture_loss.png" width="60%">
+
+Texture loss function is used in the learning process of texture prediction. Texture loss ensures that the texture of the object in ground truth data is consistent with the texture of the predicted 3D shape, when rendered onto the 2D image. Texture is predicted on top the predicted shape, therefore the gradients of the texture loss function are calculated until the predicted texture, but not until the predicted shape. In other words, texture loss does not influence predicted shape.
+
+Symmetry is also assumed in texture prediction, similar to the shape parametrization. In shape prediction, only one of the symmetric vertex positions are predicted. In texture prediction, symmetric faces are assigned to the same pixel values in the texture image.
+
 
 References
 ------------
