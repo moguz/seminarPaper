@@ -139,7 +139,13 @@ As mentioned earlier, the method learns a category-level mean shape, as well as 
 Common modes of deformation show the opening wings, thin or fat birds and several deformations of the tail and legs.<sup>[1]</sup> Qualitatively, this serves as a supporting argument for the method being able to capture meaningful deformations.
 
 ### Quantitative Results
+Although the emphasis is on the qualitative results, the authors presented quantitative results using both the CUB dataset and Pascal 3D+ dataset. For the CUB dataset, there is only 2D ground truth data available. For this reason, the predicted 3D shape is rendered to 2D using the predicted camera pose. Then, the predicted mask is compared against the ground truth segmentation mask using intersection over union (IoU) metric. This is an indirect comparison method for 3D reconstruction, however this is a feasible quantitative analysis in the absense of 3D ground truth data.
 
+<img src="iou.png" width="50%">
+
+Both the camera pose and shape prediction plays an important role in correctly predicting the segmentation mask. To highlight the effect of each prediction, the authors showed the results of a number of settings. You can see that there are red curves and blue curves, also straight curves and dashed curves in the graph. Blue curves represent the full model that is described in this post, predicting both the mean shape and instance-level deformation. On the other hand, red curves represent the model which only predicts the mean shape, therefore predicts the same 3D shape for every instance in the test time. Obviously, the accuracy of the full model is higher than the partial model. The difference in accuracy values suggests that the full model is able to learn meaningful deformations. 
+
+Dashed curves in the graph represent the setting, where structure-from-motion camera is used instead of the predicted camera pose. Straight lines represent the model which uses the predicted camera pose. Since the predicted 3D shape is rendered into image using the camera pose, the dashed lines obtain a higher mask reprojection accuracy. However, the difference in accuracy between the dashed lines and the straight lines are not significant. This is a positive sign for the method, since it indicates that the camera pose prediction is accurate (therefore close to the structure-from-motion camera).
 
 References
 ------------
