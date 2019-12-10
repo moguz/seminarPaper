@@ -36,9 +36,9 @@ To summarize, this paper differs from related work primarily in 3 aspects:
 
 Methodology
 ------------
-<img src="methodology.png" width="100%">
+<img src="methodology.png" width="90%">
 The aim of the paper is to learn a predictor which is capable of inferring the full 3D representation of an object, given a single 2D unannotated image. The full 3D representation consists of 3D shape, which is parametrized as deformable mesh, camera pose and texture. In order to achieve this, a 2-stage architecture has been used. In the first stage, the input image is fed to an encoder module. The encoder is a convolutional neural network (CNN) whose structure is ResNet-18 model followed by a convolutional layer and two fully-connected layers. Encoder module takes the input image and represents it in a shared latent space of size 200, which is then used by the modules in the second stage.
-     
+
 <img src="encoder.png" width="100%" height="120%">
 
 In the second stage of the architecture, the latent representation is shared across 3 prediction modules, namely shape prediction, camera pose prediction and texture prediction. The details of those prediction modules and design decisions will be discussed below, however it is important to know the internal architecture of these modules. Shape prediction and camera prediction modules are just linear layers and texture flow module consists of 5 upconvolution layers.
@@ -79,6 +79,8 @@ During training, the predictor updates the mean shape by minimizing the loss fun
 
 Keypoints are the crutial annotations that are used in the training process, since they provide category-specific semantic information. Since we represent the shape using a category-level mean mesh, we explitly learn to associate those semantic keypoints with the vertices of the mean shape. We use a **keypoint assignment matrix** A to specify correspondences between the vertices of the mean shape and keypoints. Every row of the keypoint assignment matrix A represents a probability distribution over all vertices, indicating the probabilities of correspondence with a specific keypoint. These probability distributions, which are initialized as the uniform distribution, are updated during the training. We also encourage that the final probability distributions are peaked distrbutions. This representation allows us to locate semantic keypoints in any predicted shape. More specifically, given the vertex positions V, the locations of the semantic keypoints can be obtained by A*V.
 
+<img src="keypoint_assignment.png" width="50%">
+
 Keypoint projection loss ensures that the semantic keypoint locations in the predicted 3D structure, when projected to 2D image using structure-from-motion camera parameters, is consistent with the ground truth semantic keypoint locations. This can be considered as the main loss function which enables us to have good predicted 3D shapes. The semantic keypoints in the training data gives semantic information about the objects (i.e. birds) in the images. Therefore, by restricting our predicted shape to have consistent semantic keypoint locations, we make sure that our predicted shape has the same semantic properties of a bird.
 
 <img src="mask_loss.png" width="55%">
@@ -93,15 +95,15 @@ Inferring 3D shape from a single image brings some assumptions about the symmetr
 
 This paper, unlike the prior works, predicts texture of the 3D shapes as well. The choice of representing 3D shape with deformable mesh becomes useful in texture prediction module. Let's recall that every 3D shape of an instance is equivalent to some kind of deformation applied to the mean shape. Moreover, the mean shape is **isomorphic** to a sphere, meaning that they have corresponding shapes. This property of the mean shape allows us to represent its texture using a texture image with fixed **UV-mapping**.
 
-<img src="texture.png" width="55%">
+<img src="texture.png" width="60%">
 
 Inferring the texture of the 3D shapes is equivalent of inferring the pixel values of the corresponding texture image. Once we predict the texture image, we can apply UV-mapping to roll texture image onto the sphere. Then, we can apply apply texture to the mean image, since the mean image and the sphere are isomorphic. Finally, we can move from the mean image to the instance-specific 3D shape since we already know how every vertex of the mean shape should be deformed in order to get the instance-specific 3D shape.
 
-<img src="texture_flow.png" width="55%">
+<img src="texture_flow.png" width="60%">
 
 Inferring pixel values of the texture image can be viewed from two perspectives. One approach would be directly predicting the pixel values by looking at the input image. This approach often results in blurry images.<sup>[1]</sup> The second approach is to predict the **texture flow**, which serves as a mapping between the input image pixels to the texture image pixels. Appearance flow tells where to copy the original pixel values, in the texture image. The obvious advantage of this method is it does not cause blurry texture images.
 
-<img src="texture_loss.png" width="60%">
+<img src="texture_loss.png" width="65%">
 
 Texture loss function is used in the learning process of texture prediction. Texture loss ensures that the texture of the object in ground truth data is consistent with the texture of the predicted 3D shape, when rendered onto the 2D image. Texture is predicted on top the predicted shape, therefore the gradients of the texture loss function are calculated until the predicted texture, but not until the predicted shape. In other words, texture loss does not influence predicted shape.
 
