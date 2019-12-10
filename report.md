@@ -147,6 +147,12 @@ Both the camera pose and shape prediction plays an important role in correctly p
 
 Dashed curves in the graph represent the setting, where structure-from-motion camera is used instead of the predicted camera pose. Straight lines represent the model which uses the predicted camera pose. Since the predicted 3D shape is rendered into image using the camera pose, the dashed lines obtain a higher mask reprojection accuracy. However, the difference in accuracy between the dashed lines and the straight lines are not significant. This is a positive sign for the method, since it indicates that the camera pose prediction is accurate (therefore close to the structure-from-motion camera).
 
+In conclusion, the mask projection accuracy graph shows two important results:
+* The model is able to learn meaningful deformations
+* Camera pose predictor module works well
+
+Besides CUB dataset, the authors also compared their method against other methods using Pascal 3D+ dataset. 
+
 References
 ------------
 [1] Kanazawa, Angjoo, et al. "Learning category-specific mesh reconstruction from image collections." Proceedings of the European Conference on Computer Vision (ECCV). 2018.  
