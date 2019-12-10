@@ -4,24 +4,24 @@ Seminar Report
 Introduction
 ------------
 
-Suppose that you are shown a picture of a bird, which you have not seen before in your life. Your brain immediately understands that the 
-object in the picture is a bird, therefore all the previous knowledge you have gathered through past experiences regarding <em>birds</em> 
+Suppose that you are shown a picture of a bird, which you have not seen before. Your brain immediately understands that the 
+object in the picture is a bird, therefore all previous knowledge you have gathered through past experiences regarding <em>birds</em> 
 in general are attached to the bird image that you have just seen. Only by seeing a single image, you can guess the size of the bird, 
-how would the bird looks like from other angles and whether the feathers on the back of the bird look similar to those you see on the image.
+how would the bird look like from other angles and whether the feathers on the opposite side of the bird look similar to those you see on the image.
 
-This paper is tackling the same problem, which is learning a predictor which predicts 3D shape, camera pose and the mesh texture at the same time, given a single image in inference time. The training data only consists of annotated 2D image collection.
+This paper is tackling the same problem, which is learning a predictor which predicts 3D shape, camera pose and the mesh texture at the same time, given a single image in inference time. The training data consists of only annotated 2D image collection.
 
 <img src="bird_image.png" width="30%"><img src="bird_3d.png" width="30%">
 
-The problem of 3D reconstruction from a single image is ill-posed<sup>[1]</sup>. If we had multiple images of the same object, then we could exploit multiple-view geometry techniques, such as formulating the problem as a convex variatonal method. However, in this paper, we are only able to reconstruct 3D shape because the predictor already knows the mean shape of a bird in inference time.
+The problem of 3D reconstruction from a single image is ill-posed<sup>[1]</sup>. If we had multiple images of the same object, then we could exploit multiple-view geometry techniques, such as formulating the problem as a convex variatonal method. However, in this paper, we are only able to reconstruct 3D shape because the predictor already knows the mean 3D shape of a bird in inference time.
 
 Related Work
 ----------------
-Prior works tackled inferring 3D shape problem with different perspectives. First group of methods tried to learn deformable models using 3D ground truth data.<sup>[2][3]</sup> The drawback of these methods are that obtaining 3D ground truth data is hard and/or expensive. Especially in cases like using animals as objects, like in CUB-200-2011 dataset<sup>[4]</sup>, 2D annotated image collection is easier to obtain than 3D scans. Therefore, those methods are fundamentally different than this paper, which only requires 2D annotated image collection as the training data.
+Prior works tackled inferring 3D shape problem with different perspectives. First group of methods tried to learn deformable models using 3D ground truth data.<sup>[2][3]</sup> The drawback of these methods are that obtaining 3D ground truth data is hard and/or expensive. Especially in cases where animals are used as objects, like in CUB-200-2011 dataset<sup>[4]</sup>, 2D annotated image collection is easier to obtain than 3D scans. Therefore, those methods are fundamentally different than this paper, which only requires 2D annotated image collection as the training data.
 
 <img src="relatedwork_1.png" width="20%"><img src="relatedwork_2.png" width="12%">
 
-Second group of related works use only 2D annotated image collection as training data, similar to this paper. However, these methods require annotations also in test time. For instance, [5] aims to infer 3D shapes of dolphins using 2D images. That method uses keypoints correspondences and segmentation masks in the training time and segmentation masks during test time. The reason behind requiring annotations during test time is that these methods use fitting-based inference, therefore they minimize some kind of loss function during inference time. Our paper, however, is a prediction-based inference model, which directly predicts the 3D shape given the input image.
+Second group of related works use only 2D annotated image collection as training data, similar to this paper. However, these methods require annotations also in test time. For instance, [5] aims to infer 3D shapes of dolphins using 2D images. That method uses keypoint correspondences and segmentation masks in the training time and segmentation masks during test time. The reason for requiring annotations during test time is that these methods use fitting-based inference, therefore they minimize some kind of loss function during inference time. Our paper, however, is a prediction-based inference model, which directly predicts the 3D shape given the input image.
 
 <img src="relatedwork_3.png" width="30%">
 
@@ -39,13 +39,13 @@ Methodology
 <img src="methodology.png" width="90%">
 The aim of the paper is to learn a predictor which is capable of inferring the full 3D representation of an object, given a single 2D unannotated image. The full 3D representation consists of 3D shape, which is parametrized as deformable mesh, camera pose and texture. In order to achieve this, a 2-stage architecture has been used. In the first stage, the input image is fed to an encoder module. The encoder is a convolutional neural network (CNN) whose structure is ResNet-18 model followed by a convolutional layer and two fully-connected layers. Encoder module takes the input image and represents it in a shared latent space of size 200, which is then used by the modules in the second stage.
 
-<img src="encoder.png" width="100%" height="120%">
+<img src="encoder.png" width="100%">
 
 In the second stage of the architecture, the latent representation is shared across 3 prediction modules, namely shape prediction, camera pose prediction and texture prediction. The details of those prediction modules and design decisions will be discussed below, however it is important to know the internal architecture of these modules. Shape prediction and camera prediction modules are just linear layers and texture flow module consists of 5 upconvolution layers.
 
-The main dataset used in this paper is CUB-200-2011, which has 6000 training and and test images if 200 species of birds.<sup>[1][4]</sup> Every image in the dataset is annotated with bounding box, visibility indicator, locations of semantic keypoints (can be imagined as the tail, the head etc.) and segmentation masks. The authors filtered out 5% of the data whose semantic keypoints are mostly non-visible.
+The main dataset used in this paper is CUB-200-2011, which has 6000 training and and test images if 200 species of birds.<sup>[1][4]</sup> Every image in the dataset is annotated with bounding box, visibility indicator, locations of semantic keypoints (can be imagined as the tail, head etc.) and segmentation masks. The authors filtered out 5% of the data whose semantic keypoints are mostly non-visible.
 
-The annotations used to supervise the learning process are semantic keypoint locations and segmentation masks. Learning process involves minimizing the weighted sum of a number of loss functions, regarding 3 prediction modules and some priors that will be explained later in this post.
+The annotations used to supervise the learning process are semantic keypoint locations and segmentation masks. Learning process involves minimizing the weighted sum of a number of loss functions, regarding 3 prediction modules and some prior terms that will be explained later in this post.
 
 ### Camera Pose Prediction
 
@@ -53,9 +53,9 @@ Camera projection in the paper is represented with weak-perspective projection. 
 
 <img src="weak_perspective.png" width="40%">
 
-In camera pose prediction module, our aim is to predict the scale of the object, as well as translation and rotation of the camera. With these parameters, we are able to project a given 3D point onto the image coordinates. Estimating camera is particularly important, since we only have 2D ground truth data and the only way to compare our predicted 3D shape with ground truth is projecting the 3D shape onto the image.
+With the camera pose prediction module, our aim is to predict the scale of the object, as well as translation and rotation of the camera. With these parameters, we are able to project a given 3D point onto the image coordinates. Estimating camera is particularly important, since we only have 2D ground truth data and the only way to compare our predicted 3D shape with ground truth is projecting the 3D shape onto the image.
 
-Since the training data only contains semantic keypoints and segmentation mask annotations, but not camera-related annotations, the authors use an algorithm called **structure-from-motion** in order to obtain camera pose estimates. When applied to the semantic keypoints, the structure-from-motion algorithm is able to obtain accurate camera pose estimates. These estimates are used to augment the training data and served as the ground truth for the learning process of camera pose.
+Since the training data only contains semantic keypoints and segmentation mask annotations, but not camera-related annotations, the authors use **structure-from-motion** in order to obtain camera pose estimates. When applied to the semantic keypoints, the structure-from-motion algorithm is able to obtain accurate camera pose estimates. These estimates are used to augment the training data and served as the ground truth for the learning process of camera pose.
 
 <img src="camera_loss.png" width="45%">
 
@@ -63,45 +63,45 @@ During training, the camera estimate is trained so that the difference between t
 
 ### Shape Prediction
 
-Arguably, the most important prediction module of this paper is shape prediction. The reason is that 3D shape is the most informative component of full 3D representation and the learning process involves both of the annotations. The paper represents 3D shapes are **deformable meshes**, which can be expressed as M=(V,F) where V is the vertices of the mesh and F is the faces. 3D shape of an instance is calculated as combining the mean shape for the class and the instance-specific deformation from the mean shape.
+Arguably, the most important prediction module of this paper is shape prediction. The reason is that 3D shape is the most informative component of full 3D representation and the learning process involves both of the annotations. The paper represents 3D shapes are **deformable meshes**, which can be expressed as M=(V,F) where V is the vertices of the mesh and F is the faces. 3D shape of an instance can be obtained by applying instance-specific deformation to the category-level mean 3D shape.
 
 <img src="meanshape.png" width="60%">
 
-The mean shape is a category-level (for the CUB-200-2011 dataset, the category is <em>birds</em>) structure, which is learned by the predictor during training time. The naive way to initialize the mean shape is setting it to a sphere, however the authors mentioned that a smarter initizalization gives better results. First, mean keypoint locations are obtained using structure-from-motion applied to the annotated keypoints in input data. Then, the convex hull of these keypoint locations are calculated. Finally, every vertex of the initial mean shape are projected onto this convex hull. This approach already gives the mean shape a reasonable starting point, with the semanctic keypoint locations being considered.
+The mean shape is a category-level (for the CUB-200-2011 dataset, the category is <em>birds</em>) structure, which is learned by the predictor during training time. The naive way to initialize the mean shape is setting it to a sphere. Having said that, the authors mentioned that a smarter initizalization gives better results. First, mean keypoint locations are obtained using structure-from-motion applied to the annotated keypoints in input data. Then, the convex hull of these keypoint locations are calculated. Finally, every vertex of the initial mean shape are projected onto this convex hull. This approach already gives the mean shape a reasonable starting point, with the semanctic keypoint locations being considered.
 
 <img src="initial_meanshape.png" width="70%">
 
-During training, the predictor updates the mean shape by minimizing the loss functions as well as learns a deformation space. By learning a deformation space, the predictor then is able to infer the instance-level deformation from the mean shape given a single image in test time. There are 2 loss functions which are used in the learning process of shape prediction:
+During training, the predictor updates the mean shape by minimizing the loss functions and learns a deformation space. By learning a deformation space, the predictor then is able to infer the instance-level deformation given a single image in test time. There are 2 loss functions which are used in the learning process of shape prediction:
 * Keypoint projection loss
 * Segmentation mask loss
 
 <img src="keypoint_loss.png" width="50%">
 
-Keypoints are the crutial annotations that are used in the training process, since they provide category-specific semantic information. Since we represent the shape using a category-level mean mesh, we explitly learn to associate those semantic keypoints with the vertices of the mean shape. We use a **keypoint assignment matrix** A to specify correspondences between the vertices of the mean shape and keypoints. Every row of the keypoint assignment matrix A represents a probability distribution over all vertices, indicating the probabilities of correspondence with a specific keypoint. These probability distributions, which are initialized as the uniform distribution, are updated during the training. We also encourage that the final probability distributions are peaked distrbutions. This representation allows us to locate semantic keypoints in any predicted shape. More specifically, given the vertex positions V, the locations of the semantic keypoints can be obtained by A*V.
+Keypoints are the most crutial annotations that are used in the training process, since they provide category specific semantic information. Since we represent the shape using a category-level mean mesh, we explitly learn to associate those semantic keypoints with the vertices of the mean shape. We use a **keypoint assignment matrix** A to specify correspondences between the vertices of the mean shape and keypoints. Every row of the keypoint assignment matrix A represents a probability distribution over all vertices, indicating the probabilities of correspondence with a specific keypoint. These probability distributions, which are initialized as the uniform distribution, are updated during the training. We also encourage that the final probability distributions are peaked distributions. This representation allows us to locate semantic keypoints in any predicted shape. Technically speaking, given the vertex positions V, the locations of the semantic keypoints can be obtained by A*V.
 
 <img src="keypoint_assignment.png" width="50%">
 
-Keypoint projection loss ensures that the semantic keypoint locations in the predicted 3D structure, when projected to 2D image using structure-from-motion camera parameters, is consistent with the ground truth semantic keypoint locations. This can be considered as the main loss function which enables us to have good predicted 3D shapes. The semantic keypoints in the training data gives semantic information about the objects (i.e. birds) in the images. Therefore, by restricting our predicted shape to have consistent semantic keypoint locations, we make sure that our predicted shape has the same semantic properties of a bird.
+Keypoint projection loss ensures that the semantic keypoint locations in the predicted 3D structure, when projected to 2D image using structure-from-motion camera parameters, is consistent with the ground truth semantic keypoint locations. This can be considered as the main loss function which enables us to have good predicted 3D shapes. The semantic keypoints in the training data gives semantic information about the objects (i.e. birds) in the images. Therefore, by restricting our predicted shape to have consistent semantic keypoint locations, we make sure that our predicted shape has similar semantic properties with a bird.
 
 <img src="mask_loss.png" width="55%">
 
-The second loss function of the shape prediction module is the segmentation mask loss. It enforces that the predicted 3D mesh is consistent with the grount truth segmentation mask. Here, a renderer is needed since we need to compare segmentation masks in 2D. The authors use **Neural Mesh Renderer**<sup>[7]</sup> for this purpose. For a more detailed discussion about Neural Mesh Renderer, readers can see the blog post for that paper. 
+The second loss function of the shape prediction module is the segmentation mask loss. It ensures that the predicted 3D mesh is consistent with the grount truth segmentation mask. Here, a renderer is needed since we need to compare segmentation masks in 2D. The authors use **Neural Mesh Renderer**<sup>[7]</sup> for this purpose. For a more detailed discussion about Neural Mesh Renderer, readers can see the blog post for that paper. 
 
-Intuitively, the mask loss makes sure that our predicted shape is consistent with the ground truth segmentation masks in the dataset. Even though the keypoint loss ensures we capture the semantic keypoints, mask loss is still helpful in order to fine-tune our prediction (e.g. we can imagine that it makes our predicted bird a fatter/thinner)
+Intuitively, the mask loss makes sure that our predicted shape is consistent with the ground truth segmentation masks in the dataset. Even though the keypoint loss ensures that we capture the semantic keypoints, mask loss is still helpful in order to fine-tune our prediction (e.g. we can imagine that it makes our predicted bird fatter or thinner)
 
-Inferring 3D shape from a single image brings some assumptions about the symmetry of the objects. Since there is only one image of an object available, we assume that the other half of the object is actually symmetric. For this reason, only one of the symmetric vertex pairs are learned/predicted.
+Inferring 3D shape from a single image requires some assumptions about the symmetry of the objects. Since there is only one image of an object available, we assume that the other half of the object is actually symmetric. For this reason, only one of the symmetric vertex pairs are learned/predicted.
 
 ### Texture Prediction
 
-This paper, unlike the prior works, predicts texture of the 3D shapes as well. The choice of representing 3D shape with deformable mesh becomes useful in texture prediction module. Let's recall that every 3D shape of an instance is equivalent to some kind of deformation applied to the mean shape. Moreover, the mean shape is **isomorphic** to a sphere, meaning that they have corresponding shapes. This property of the mean shape allows us to represent its texture using a texture image with fixed **UV-mapping**.
+This paper, unlike the prior works that were mentioned, predicts texture of the 3D shapes as well. The choice of representing 3D shape with deformable mesh becomes useful in texture prediction module. Let's recall that every 3D shape of an instance is equivalent to some kind of deformation applied to the mean shape. Moreover, the mean shape is **isomorphic** to a sphere, meaning that they have corresponding shapes. This property of the mean shape allows us to represent its texture using a texture image with fixed **UV-mapping**.
 
 <img src="texture.png" width="60%">
 
-Inferring the texture of the 3D shapes is equivalent of inferring the pixel values of the corresponding texture image. Once we predict the texture image, we can apply UV-mapping to roll texture image onto the sphere. Then, we can apply apply texture to the mean image, since the mean image and the sphere are isomorphic. Finally, we can move from the mean image to the instance-specific 3D shape since we already know how every vertex of the mean shape should be deformed in order to get the instance-specific 3D shape.
+Inferring the texture of the 3D shapes is equivalent of inferring the pixel values of the corresponding texture image. Once we predict the texture image, we can apply UV-mapping to roll texture image onto the sphere. Then, we can apply texture to the mean shape, since the mean shape and the sphere are isomorphic. Finally, we can move from the mean shape to the instance-specific 3D shape since we already know how every vertex of the mean shape should be deformed in order to obtain the instance-specific 3D shape.
 
 <img src="texture_flow.png" width="60%">
 
-Inferring pixel values of the texture image can be viewed from two perspectives. One approach would be directly predicting the pixel values by looking at the input image. This approach often results in blurry images.<sup>[1]</sup> The second approach is to predict the **texture flow**, which serves as a mapping between the input image pixels to the texture image pixels. Appearance flow tells where to copy the original pixel values, in the texture image. The obvious advantage of this method is it does not cause blurry texture images.
+Inferring pixel values of the texture image can be viewed from two perspectives. One approach would be directly predicting the pixel from the input image. This approach often results in blurry images.<sup>[1]</sup> The second approach is to predict the **texture flow**, which serves as a mapping between the input image pixels and the texture image pixels. Appearance flow tells where to copy the original pixel values, in the texture image. The obvious advantage of this method is that it does not cause blurry texture images.
 
 <img src="texture_loss.png" width="65%">
 
@@ -119,7 +119,7 @@ In addition to the loss functions of the 3 prediction modules, 3 prior terms are
 
 Results
 ----------
-This paper tackles the 3D mesh reconstruction problem by using only 2D input data. Most of the works that have been done in this field require more supervision than this method. Therefore, the results which authors showed in the paper focus more on the qualitative side. Similarly, the choice of the dataset (birds images) suggests that the emphasis to be explaning how this method can make inferring full 3D representation by using only 2D images possible, rather than showing extensive quantitative results.
+This paper tackles the 3D mesh reconstruction problem by using only 2D input data. Most of the works that have been done in this field require more supervision than this method. Therefore, the results which authors showed in the paper focus more on the qualitative side. Similarly, the choice of the dataset (birds images) suggests that the emphasis is on explaning how this method can make inferring full 3D representation by using only 2D images possible, rather than showing extensive quantitative results.
 
 ### Qualitative Results
 The authors present randomly selected reconstruction results at the end of the paper. We can see that the method is able to capture the general shape and texture of the objects in the input image. Since the camera pose is also predicted, reconstructed shapes are shown from different angles as well.
@@ -129,10 +129,10 @@ Random results also show that the method is able to capture different poses of t
 <img src="random_reconstruction_1.png" width="50%"><img src="random_reconstruction_2.png" width="50%">
 <img src="random_reconstruction_3.png" width="50%"><img src="random_reconstruction_4.png" width="50%">
 
-On the other hand, one can see that the reconstructed shapes do not strongly differ from each other for the most of the instances, therefore the constructions are less accurate for the birds which are more different from the other birds. This suggests that the method's capability of learning instance-specific deformations are limited. This is indeed logical, since there is only one image of the same bird in the inference time.
+On the other hand, one can see that the reconstructed shapes do not strongly differ from each other for the most of the instances, therefore the constructions are less accurate for the birds which are more different from the other birds. This suggests that the method's capability of learning instance-specific deformations are limited. This is indeed logical, since only one image of the same bird is given the the model in the inference time.
 
 #### Learned deformation modes
-As mentioned earlier, the method learns a category-level mean shape, as well as a deformation space so that it is able to predict the instance-level deformation in test time. The authors included an analysis of this learned deformation space by showing the common modes of deformation in the whole training dataset. This is obtained by applying Principal Component Analysis (PCA) to the latent deformation space. Thus, some of the most typical deformations in the training dataset are visualized as follows: 
+As mentioned earlier, the model learns a category-level mean shape, as well as a deformation space so that it is able to predict the instance-level deformation in test time. The authors included an analysis of this learned deformation space by showing the common modes of deformation in the whole training dataset. This is obtained by applying Principal Component Analysis (PCA) to the latent deformation space. Thus, some of the most typical deformations in the training dataset are visualized as follows: 
 
 <img src="deformation_modes.png" width="30%">
 
@@ -152,7 +152,7 @@ Although the emphasis is on the qualitative results, the authors presented quant
 
 Both the camera pose and shape prediction plays an important role in correctly predicting the segmentation mask. To highlight the effect of each prediction, the authors showed the results of a number of settings. You can see that there are red curves and blue curves, also straight curves and dashed curves in the graph. Blue curves represent the full model that is described in this post, predicting both the mean shape and instance-level deformation. On the other hand, red curves represent the model which only predicts the mean shape, therefore predicts the same 3D shape for every instance in the test time. Obviously, the accuracy of the full model is higher than the partial model. The difference in accuracy values suggests that the full model is able to learn meaningful deformations. 
 
-Dashed curves in the graph represent the setting, where structure-from-motion camera is used instead of the predicted camera pose. Straight lines represent the model which uses the predicted camera pose. Since the predicted 3D shape is rendered into image using the camera pose, the dashed lines obtain a higher mask reprojection accuracy. However, the difference in accuracy between the dashed lines and the straight lines are not significant. This is a positive sign for the method, since it indicates that the camera pose prediction is accurate (therefore close to the structure-from-motion camera).
+Dashed curves in the graph represent the setting, where structure-from-motion camera is used instead of the predicted camera pose. Straight lines represent the model which uses the predicted camera pose. Since the predicted 3D shape is rendered into image using the camera pose, the dashed lines obtain a higher mask reprojection accuracy. However, the difference in accuracy between the dashed lines and the straight lines is not significant. This is a positive sign for the method, since it indicates that the camera pose prediction is accurate (therefore close to the structure-from-motion camera).
 
 In conclusion, the mask projection accuracy graph shows two important results:
 * The model is able to learn meaningful deformations
@@ -168,7 +168,7 @@ This work tackles the problem of predicting full 3D representation of an object,
 
 Naturally, having little supervision comes with some limitations. The example would be asymmetric objects or limited learned deformation space. One supporting argument would be that the mean shape can already achieve around 80% of the accuracy of the full model. I believe that if multiple images of the same object were available to the model, the predicted 3D shapes would have been more accurate and the learned deformation space would have been more informative. 
 
-Another possible limitation of this model would be having classes with largely varying objects. In the CUB dataset, there are only birds. Generally, the birds have rather similar structure with minor deformations from each other. Therefore, the mean bird shape already does a good job and learned deformations are not necessarily large. If we consider a case where there is a class "pedestrian" with images of people from all ages with varying poses, the mean shape would have been less informative and learned deformation space would have been larger. A more extreme example would be having a class named "mammals" with images including blue whales and people.
+Another possible limitation of this model would be having classes with largely varying objects. In the CUB dataset, there are only birds. Generally, the birds have rather similar structures with minor deformations from each other. Therefore, the mean bird shape already does a good job and learned deformations are not necessarily large. If we consider a case where there is a class "pedestrian" with images of people from all ages with varying poses, the mean shape would have been less informative and learned deformation space would have been larger. An extreme example would be having a class named "mammals" with images including blue whales and people.
 
 Despite the limitations, I think this method is an example which shows that it is possible to tackle 3D reconstruction problem with very little supervision, while making reasonable assumptions, and still be able to get good results.
 
