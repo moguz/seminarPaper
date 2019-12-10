@@ -138,6 +138,13 @@ As mentioned earlier, the method learns a category-level mean shape, as well as 
 
 Common modes of deformation show the opening wings, thin or fat birds and several deformations of the tail and legs.<sup>[1]</sup> Qualitatively, this serves as a supporting argument for the method being able to capture meaningful deformations.
 
+#### Texture Transfer
+<img src="texture_transfer.png" width="70%">
+
+One possible application of the method proposed in the paper is texture transfer between instances. Suppose you have 2 different bird images. By feeding these two input images to the model, we can obtain the predicted 3D shapes and textures of these 2 birds. Then, it is possible to texture 3D shape of a bird with the predicted texture image of the other image. The resulting textured mesh will look like the mixture of 2 birds, while the shape comes from one input and the texture comes from the other. While, in the paper, it is not very clear how texture transfer would be useful in real-world scenarios, it shows the capabilities of the model. Hence, it can be seen as a creative application which is derived from this model.
+
+<img src="texture_transfer_examples.png" width="70%">
+
 ### Quantitative Results
 Although the emphasis is on the qualitative results, the authors presented quantitative results using both the CUB dataset and Pascal 3D+ dataset. For the CUB dataset, there is only 2D ground truth data available. For this reason, the predicted 3D shape is rendered to 2D using the predicted camera pose. Then, the predicted mask is compared against the ground truth segmentation mask using intersection over union (IoU) metric. This is an indirect comparison method for 3D reconstruction, however this is a feasible quantitative analysis in the absense of 3D ground truth data.
 
@@ -151,7 +158,19 @@ In conclusion, the mask projection accuracy graph shows two important results:
 * The model is able to learn meaningful deformations
 * Camera pose predictor module works well
 
-Besides CUB dataset, the authors also compared their method against other methods using Pascal 3D+ dataset. 
+<img src="pascal.png" width="70%">
+
+Besides CUB dataset, the authors also made a benchmark using Pascal 3D+ dataset, with other approaches which only require annotated 2D images as training data. The results show that this method is comparable to the other works, it even achieves the highest mean IoU value for the aeroplane class. Furthermore, this method can additionally predict texture, while other methods cannot.
+
+Conclusion
+---------
+This work tackles the problem of predicting full 3D representation of an object, having very little supervision. Although there are different methods which would have comparable results, they often require more supervision that this method (e.g. 3D ground truth data). The exciting point about this work is that it does a good job predicting 3D shape, camera pose and texture given only 2D annotated image collection as training data.
+
+Naturally, having little supervision comes with some limitations. The example would be asymmetric objects or limited learned deformation space. One supporting argument would be that the mean shape can already achieve around 80% of the accuracy of the full model. I believe that if multiple images of the same object were available to the model, the predicted 3D shapes would have been more accurate and the learned deformation space would have been more informative. 
+
+Another possible limitation of this model would be having classes with largely varying objects. In the CUB dataset, there are only birds. Generally, the birds have rather similar structure with minor deformations from each other. Therefore, the mean bird shape already does a good job and learned deformations are not necessarily large. If we consider a case where there is a class "pedestrian" with images of people from all ages with varying poses, the mean shape would have been less informative and learned deformation space would have been larger. A more extreme example would be having a class named "mammals" with images including blue whales and people.
+
+Despite the limitations, I think this method is an example which shows that it is possible to tackle 3D reconstruction problem with very little supervision, while making reasonable assumptions, and still be able to get good results.
 
 References
 ------------
