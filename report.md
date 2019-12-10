@@ -38,9 +38,9 @@ Methodology
 ------------
 <img src="methodology.png" width="100%">
 The aim of the paper is to learn a predictor which is capable of inferring the full 3D representation of an object, given a single 2D unannotated image. The full 3D representation consists of 3D shape, which is parametrized as deformable mesh, camera pose and texture. In order to achieve this, a 2-stage architecture has been used. In the first stage, the input image is fed to an encoder module. The encoder is a convolutional neural network (CNN) whose structure is ResNet-18 model followed by a convolutional layer and two fully-connected layers. Encoder module takes the input image and represents it in a shared latent space of size 200, which is then used by the modules in the second stage.
-  
-   
-<img src="encoder.png" width="100%">
+     
+<img src="encoder.png" width="100%" height="120%">
+
 In the second stage of the architecture, the latent representation is shared across 3 prediction modules, namely shape prediction, camera pose prediction and texture prediction. The details of those prediction modules and design decisions will be discussed below, however it is important to know the internal architecture of these modules. Shape prediction and camera prediction modules are just linear layers and texture flow module consists of 5 upconvolution layers.
 
 The main dataset used in this paper is CUB-200-2011, which has 6000 training and and test images if 200 species of birds.<sup>[1][4]</sup> Every image in the dataset is annotated with bounding box, visibility indicator, locations of semantic keypoints (can be imagined as the tail, the head etc.) and segmentation masks. The authors filtered out 5% of the data whose semantic keypoints are mostly non-visible.
@@ -128,6 +128,14 @@ Random results also show that the method is able to capture different poses of t
 
 On the other hand, one can see that the reconstructed shapes do not strongly differ from each other for the most of the instances, therefore the constructions are less accurate for the birds which are more different from the other birds. This suggests that the method's capability of learning instance-specific deformations are limited. This is indeed logical, since there is only one image of the same bird in the inference time.
 
+#### Learned deformation modes
+As mentioned earlier, the method learns a category-level mean shape, as well as a deformation space so that it is able to predict the instance-level deformation in test time. The authors included an analysis of this learned deformation space by showing the common modes of deformation in the whole training dataset. This is obtained by applying Principal Component Analysis (PCA) to the latent deformation space. Thus, some of the most typical deformations in the training dataset are visualized as follows: 
+
+<img src="deformation_modes.png" width="30%">
+
+Common modes of deformation show the opening wings, thin or fat birds and several deformations of the tail and legs.<sup>[1]</sup> Qualitatively, this serves as a supporting argument for the method being successful in capturing meaningful deformations.
+
+### Quantitative Results
 
 
 References
