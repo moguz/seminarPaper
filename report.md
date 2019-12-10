@@ -13,7 +13,7 @@ This paper is tackling the same problem, which is learning a predictor which pre
 
 <img src="bird_image.png" width="30%"><img src="bird_3d.png" width="30%">
 
-The problem of 3D reconstruction from a single image is ill-posed<sup>[1]</sup>. If we had multiple images of the same object, then we could exploit multiple-view geometry techniques, such as formulating the problem as a convex variatonal method. However, in this paper, we are only able to reconstruct 3D shape because the predictor already knows the mean 3D shape of a bird in inference time.
+The problem of 3D reconstruction from a single image is ill-posed<sup>[1]</sup>. If we had multiple images of the same object, then we could exploit multiple-view geometry techniques, such as formulating the problem as a convex variational method. However, in this paper, we are only able to reconstruct 3D shape because the predictor already knows the mean 3D shape of a bird in inference time.
 
 Related Work
 ----------------
@@ -37,7 +37,7 @@ To summarize, this paper differs from related work primarily in 3 aspects:
 Methodology
 ------------
 <img src="methodology.png" width="90%">
-The aim of the paper is to learn a predictor which is capable of inferring the full 3D representation of an object, given a single 2D unannotated image. The full 3D representation consists of 3D shape, which is parametrized as deformable mesh, camera pose and texture. In order to achieve this, a 2-stage architecture has been used. In the first stage, the input image is fed to an encoder module. The encoder is a convolutional neural network (CNN) whose structure is ResNet-18 model followed by a convolutional layer and two fully-connected layers. Encoder module takes the input image and represents it in a shared latent space of size 200, which is then used by the modules in the second stage.
+The aim of the paper is to learn a predictor which is capable of inferring the full 3D representation of an object, given a single 2D unannotated image. The full 3D representation consists of 3D shape, which is parameterized as deformable mesh, camera pose and texture. In order to achieve this, a 2-stage architecture has been used. In the first stage, the input image is fed to an encoder module. The encoder is a convolutional neural network (CNN) whose structure is ResNet-18 model followed by a convolutional layer and two fully-connected layers. Encoder module takes the input image and represents it in a shared latent space of size 200, which is then used by the modules in the second stage.
 
 <img src="encoder.png" width="100%">
 
@@ -67,7 +67,7 @@ Arguably, the most important prediction module of this paper is shape prediction
 
 <img src="meanshape.png" width="60%">
 
-The mean shape is a category-level (for the CUB-200-2011 dataset, the category is <em>birds</em>) structure, which is learned by the predictor during training time. The naive way to initialize the mean shape is setting it to a sphere. Having said that, the authors mentioned that a smarter initizalization gives better results. First, mean keypoint locations are obtained using structure-from-motion applied to the annotated keypoints in input data. Then, the convex hull of these keypoint locations are calculated. Finally, every vertex of the initial mean shape are projected onto this convex hull. This approach already gives the mean shape a reasonable starting point, with the semanctic keypoint locations being considered.
+The mean shape is a category-level (for the CUB-200-2011 dataset, the category is <em>birds</em>) structure, which is learned by the predictor during training time. The naive way to initialize the mean shape is setting it to a sphere. Having said that, the authors mentioned that a smarter initialization gives better results. First, mean keypoint locations are obtained using structure-from-motion applied to the annotated keypoints in input data. Then, the convex hull of these keypoint locations are calculated. Finally, every vertex of the initial mean shape are projected onto this convex hull. This approach already gives the mean shape a reasonable starting point, with the semantic keypoint locations being considered.
 
 <img src="initial_meanshape.png" width="70%">
 
@@ -77,7 +77,7 @@ During training, the predictor updates the mean shape by minimizing the loss fun
 
 <img src="keypoint_loss.png" width="50%">
 
-Keypoints are the most crutial annotations that are used in the training process, since they provide category specific semantic information. Since we represent the shape using a category-level mean mesh, we explitly learn to associate those semantic keypoints with the vertices of the mean shape. We use a **keypoint assignment matrix** A to specify correspondences between the vertices of the mean shape and keypoints. Every row of the keypoint assignment matrix A represents a probability distribution over all vertices, indicating the probabilities of correspondence with a specific keypoint. These probability distributions, which are initialized as the uniform distribution, are updated during the training. We also encourage that the final probability distributions are peaked distributions. This representation allows us to locate semantic keypoints in any predicted shape. Technically speaking, given the vertex positions V, the locations of the semantic keypoints can be obtained by A*V.
+Keypoints are the most crucial annotations that are used in the training process, since they provide category specific semantic information. Since we represent the shape using a category-level mean mesh, we explicitly learn to associate those semantic keypoints with the vertices of the mean shape. We use a **keypoint assignment matrix** A to specify correspondences between the vertices of the mean shape and keypoints. Every row of the keypoint assignment matrix A represents a probability distribution over all vertices, indicating the probabilities of correspondence with a specific keypoint. These probability distributions, which are initialized as the uniform distribution, are updated during the training. We also encourage that the final probability distributions are peaked distributions. This representation allows us to locate semantic keypoints in any predicted shape. Technically speaking, given the vertex positions V, the locations of the semantic keypoints can be obtained by A*V.
 
 <img src="keypoint_assignment.png" width="50%">
 
@@ -85,7 +85,7 @@ Keypoint projection loss ensures that the semantic keypoint locations in the pre
 
 <img src="mask_loss.png" width="55%">
 
-The second loss function of the shape prediction module is the segmentation mask loss. It ensures that the predicted 3D mesh is consistent with the grount truth segmentation mask. Here, a renderer is needed since we need to compare segmentation masks in 2D. The authors use **Neural Mesh Renderer**<sup>[7]</sup> for this purpose. For a more detailed discussion about Neural Mesh Renderer, readers can see the blog post for that paper. 
+The second loss function of the shape prediction module is the segmentation mask loss. It ensures that the predicted 3D mesh is consistent with the ground truth segmentation mask. Here, a renderer is needed since we need to compare segmentation masks in 2D. The authors use **Neural Mesh Renderer**<sup>[7]</sup> for this purpose. For a more detailed discussion about Neural Mesh Renderer, readers can see the blog post for that paper. 
 
 Intuitively, the mask loss makes sure that our predicted shape is consistent with the ground truth segmentation masks in the dataset. Even though the keypoint loss ensures that we capture the semantic keypoints, mask loss is still helpful in order to fine-tune our prediction (e.g. we can imagine that it makes our predicted bird fatter or thinner)
 
@@ -107,19 +107,19 @@ Inferring pixel values of the texture image can be viewed from two perspectives.
 
 Texture loss function is used in the learning process of texture prediction. Texture loss ensures that the texture of the object in ground truth data is consistent with the texture of the predicted 3D shape, when rendered onto the 2D image. Texture is predicted on top the predicted shape, therefore the gradients of the texture loss function are calculated until the predicted texture, but not until the predicted shape. In other words, texture loss does not influence predicted shape.
 
-Symmetry is also assumed in texture prediction, similar to the shape parametrization. In shape prediction, only one of the symmetric vertex positions are predicted. In texture prediction, symmetric faces are assigned to the same pixel values in the texture image.
+Symmetry is also assumed in texture prediction, similar to the shape parameterization. In shape prediction, only one of the symmetric vertex positions are predicted. In texture prediction, symmetric faces are assigned to the same pixel values in the texture image.
 
 ### Priors
 
 In addition to the loss functions of the 3 prediction modules, 3 prior terms are used to encourage additional properties. These are namely smoothness, deformation regularization and keypoint association.
 
-* **Smoothness** prior term encourages that the surfaces of the predicted 3D shape to be smooth. Following the prior work in Computer Graphics commmunity, authors used minimization of the mean curvature to represent smoothness.<sup>[8][9]</sup>
+* **Smoothness** prior term encourages that the surfaces of the predicted 3D shape to be smooth. Following the prior work in Computer Graphics community, authors used minimization of the mean curvature to represent smoothness.<sup>[8][9]</sup>
 * **Deformation regularization** prior term prevents instance-level deformations to be arbitrarily large.
-* **Keypoint association** prior term encourages that the probability distrubution in every row of the keypoint association matrix A to be a peaked distribution. It is formulated as minimizing the average entropy over all keypoints.
+* **Keypoint association** prior term encourages that the probability distribution in every row of the keypoint association matrix A to be a peaked distribution. It is formulated as minimizing the average entropy over all keypoints.
 
 Results
 ----------
-This paper tackles the 3D mesh reconstruction problem by using only 2D input data. Most of the works that have been done in this field require more supervision than this method. Therefore, the results which authors showed in the paper focus more on the qualitative side. Similarly, the choice of the dataset (birds images) suggests that the emphasis is on explaning how this method can make inferring full 3D representation by using only 2D images possible, rather than showing extensive quantitative results.
+This paper tackles the 3D mesh reconstruction problem by using only 2D input data. Most of the works that have been done in this field require more supervision than this method. Therefore, the results which authors showed in the paper focus more on the qualitative side. Similarly, the choice of the dataset (birds images) suggests that the emphasis is on explaining how this method can make inferring full 3D representation by using only 2D images possible, rather than showing extensive quantitative results.
 
 ### Qualitative Results
 The authors present randomly selected reconstruction results at the end of the paper. We can see that the method is able to capture the general shape and texture of the objects in the input image. Since the camera pose is also predicted, reconstructed shapes are shown from different angles as well.
@@ -146,7 +146,7 @@ One possible application of the method proposed in the paper is texture transfer
 <img src="texture_transfer_examples.png" width="70%">
 
 ### Quantitative Results
-Although the emphasis is on the qualitative results, the authors presented quantitative results using both the CUB dataset and Pascal 3D+ dataset. For the CUB dataset, there is only 2D ground truth data available. For this reason, the predicted 3D shape is rendered to 2D using the predicted camera pose. Then, the predicted mask is compared against the ground truth segmentation mask using intersection over union (IoU) metric. This is an indirect comparison method for 3D reconstruction, however this is a feasible quantitative analysis in the absense of 3D ground truth data.
+Although the emphasis is on the qualitative results, the authors presented quantitative results using both the CUB dataset and Pascal 3D+ dataset. For the CUB dataset, there is only 2D ground truth data available. For this reason, the predicted 3D shape is rendered to 2D using the predicted camera pose. Then, the predicted mask is compared against the ground truth segmentation mask using intersection over union (IoU) metric. This is an indirect comparison method for 3D reconstruction, however this is a feasible quantitative analysis in the absence of 3D ground truth data.
 
 <img src="iou.png" width="50%">
 
