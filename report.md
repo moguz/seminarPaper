@@ -55,7 +55,7 @@ Camera projection in the paper is represented with weak-perspective projection. 
 
 In camera pose prediction module, our aim is to predict the scale of the object, as well as translation and rotation of the camera. With these parameters, we are able to project a given 3D point onto the image coordinates. Estimating camera is particularly important, since we only have 2D ground truth data and the only way to compare our predicted 3D shape with ground truth is projecting the 3D shape onto the image.
 
-Since the training data only contains semantic keypoints and segmentation mask annotations, but not camera-related annotations, the authors use an algorithm called **structure-from-motion** in order to obtain camera pose estimates. The idea is using the semantic keypoints, the structure-from-motion algorithm is able to obtain accurate camera pose estimates. These estimates are used as ground truth for the learning process of the camera pose.
+Since the training data only contains semantic keypoints and segmentation mask annotations, but not camera-related annotations, the authors use an algorithm called **structure-from-motion** in order to obtain camera pose estimates. When applied to the semantic keypoints, the structure-from-motion algorithm is able to obtain accurate camera pose estimates. These estimates are used to augment the training data and served as the ground truth for the learning process of camera pose.
 
 <img src="camera_loss.png" width="45%">
 
@@ -125,6 +125,7 @@ The authors present randomly selected reconstruction results at the end of the p
 Random results also show that the method is able to capture different poses of the birds, such as flying position or different orientations of the wings.
 
 <img src="random_reconstruction_1.png" width="50%"><img src="random_reconstruction_2.png" width="50%">
+<img src="random_reconstruction_3.png" width="50%"><img src="random_reconstruction_4.png" width="50%">
 
 On the other hand, one can see that the reconstructed shapes do not strongly differ from each other for the most of the instances, therefore the constructions are less accurate for the birds which are more different from the other birds. This suggests that the method's capability of learning instance-specific deformations are limited. This is indeed logical, since there is only one image of the same bird in the inference time.
 
@@ -133,7 +134,7 @@ As mentioned earlier, the method learns a category-level mean shape, as well as 
 
 <img src="deformation_modes.png" width="30%">
 
-Common modes of deformation show the opening wings, thin or fat birds and several deformations of the tail and legs.<sup>[1]</sup> Qualitatively, this serves as a supporting argument for the method being successful in capturing meaningful deformations.
+Common modes of deformation show the opening wings, thin or fat birds and several deformations of the tail and legs.<sup>[1]</sup> Qualitatively, this serves as a supporting argument for the method being able to capture meaningful deformations.
 
 ### Quantitative Results
 
