@@ -1,4 +1,4 @@
-Seminar Report
+Paper Review: Learning Category-Specific Mesh Reconstruction from Image Collections
 =======
 
 Introduction
